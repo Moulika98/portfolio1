@@ -691,28 +691,32 @@
   function showTyping(){ var r=document.createElement('div'); r.className='sm-row bot'; r.id='sm-typing'; r.innerHTML='<div class="sm-row-av">SM</div><div class="sm-bub"><div class="sm-dots"><div class="sm-dot"></div><div class="sm-dot"></div><div class="sm-dot"></div></div></div>'; msgs.appendChild(r); msgs.scrollTop=msgs.scrollHeight; }
   function hideTyping(){ var e=document.getElementById('sm-typing'); if(e) e.remove(); }
 
-  async function chat(text){
-    text=text.trim(); if(!text||busy) return;
-    sugg.innerHTML=''; addMsg('user',text); inp.value=''; inp.style.height='auto';
-    hist.push({role:'user',content:text});
-    busy=true; send.disabled=true; showTyping();
-    try {
-      var res=await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYSTEM,messages:hist})
-      });
-      var data=await res.json();
-      hideTyping();
-      var reply=(data.content||[]).map(function(b){return b.text||'';}).join('')||"Sorry, couldn't get a response right now.";
-      hist.push({role:'assistant',content:reply}); addMsg('bot',reply);
-    } catch(e){
-      hideTyping(); addMsg('bot',"Something went wrong. Email saimoulika98@gmail.com directly.");
-      hist.pop();
-    }
-    busy=false; send.disabled=false; inp.focus();
+ async function chat(text){
+  text=text.trim(); if(!text||busy) return;
+  sugg.innerHTML=''; addMsg('user',text); inp.value=''; inp.style.height='auto';
+  hist.push({role:'user',content:text});
+  busy=true; send.disabled=true; showTyping();
+  try {
+    var res = await fetch('https://portfolio-proxy.saimoulika98.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM,
+        messages: hist
+      })
+    });
+    var data = await res.json();
+    hideTyping();
+    var reply = (data.content||[]).map(function(b){ return b.text||''; }).join('') || "Sorry, couldn't get a response right now.";
+    hist.push({role:'assistant', content:reply}); addMsg('bot', reply);
+  } catch(e){
+    hideTyping(); addMsg('bot',"Something went wrong. Email saimoulika98@gmail.com directly.");
+    hist.pop();
   }
-
+  busy=false; send.disabled=false; inp.focus();
+}
   send.addEventListener('click',function(){ chat(inp.value); });
   inp.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chat(inp.value);} });
   inp.addEventListener('input',function(){ inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,90)+'px'; });
